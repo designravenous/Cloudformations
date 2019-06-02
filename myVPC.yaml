@@ -22,8 +22,6 @@ Parameters:
 
   KeyPair:
     Type: AWS::EC2::KeyPair::KeyName
-    Default: Latest_Ireland
-    Description: "The Keypair for the EC2 instance"
 
   Ec2Name:
     Type: String
@@ -127,7 +125,7 @@ Resources:
         -
           Key: "Name"
           Value: !Sub ec2-instance-${Ec2Name}
-
+#https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html
 Outputs:
   InstanceIP:
     Value: !GetAtt [Ec2InstanceOne, PublicIp]
@@ -136,3 +134,15 @@ Outputs:
   VPCcidr:
     Value: !GetAtt [MyVPC, CidrBlock]
     Description: "Description of VPC"
+
+  VPCId:
+    Value: !Ref MyVPC
+    Description: "Id of VPC"
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCID"
+
+  SubnetId:
+    Value: !Ref SubnetOne
+    Description: "ID of Subnet One"
+    Export:
+      Name: !Sub "${AWS::StackName}-SUBNETID"
