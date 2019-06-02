@@ -1,0 +1,138 @@
+---
+#TO DO
+#Create RouteTable with Subnet assostiation +
+#routes 0.0.0.0/0 to IGW and ::/0 to IGW
+#Edit Security Inbound Rules SSH 0.0.0.0/0 &
+#Kolla upp Export Name
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Creating VPC environment "
+Metadata:
+  Author:
+    Description: "Peter Holgersson"
+
+Parameters:
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: "Parameters for EC2 instances"
+
+  KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: Latest_Ireland
+    Description: "The Keypair for the EC2 instance"
+
+  Ec2Name:
+    Type: String
+    Description: "Naming the EC2 Instance"
+
+Resources:
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  TheInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref TheInternetGateway
+      VpcId: !Ref MyVPC
+
+  MyRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+
+  SubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "eu-west-1a"
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        -
+          Key: "SubnetType"
+          Value: "Public"
+        -
+          Key: "Name"
+          Value: "SubnetOne"
+      VpcId: !Ref MyVPC
+
+  SubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "eu-west-1b"
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        -
+          Key: "SubnetType"
+          Value: "Public"
+        -
+          Key: "Name"
+          Value: "SubnetTwo"
+      VpcId: !Ref MyVPC
+
+  SubnetThree:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: "eu-west-1c"
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        -
+          Key: "SubnetType"
+          Value: "Public"
+        -
+          Key: "Name"
+          Value: "SubnetOne"
+      VpcId: !Ref MyVPC
+
+  SubnetsRouteTableAssociationOne:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref MyRouteTable
+      SubnetId: !Ref SubnetOne
+
+  SubnetsRouteTableAssociationTwo:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref MyRouteTable
+      SubnetId: !Ref SubnetTwo
+
+  SubnetsRouteTableAssociationThree:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref MyRouteTable
+      SubnetId: !Ref SubnetThree
+
+  Ec2InstanceOne:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType:
+        Ref: InstanceTypeParameter
+      ImageId: ami-030dbca661d402413
+      KeyName:
+        Ref: KeyPair
+      SubnetId: !Ref SubnetOne
+      Tags:
+        -
+          Key: "Name"
+          Value: !Sub ec2-instance-${Ec2Name}
+
+Outputs:
+  InstanceIP:
+    Value: !GetAtt [Ec2InstanceOne, PublicIp]
+    Description: "The Public IP of the instance"
+
+  VPCcidr:
+    Value: !GetAtt [MyVPC, CidrBlock]
+    Description: "Description of VPC"
